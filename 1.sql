@@ -76,3 +76,45 @@ MIN(calificacion) AS minima,
 STDDEV(calificacion) AS desviacion_estandar,
 VARIANCE(calificacion) AS varianza
 FROM matriculas;
+
+SELECT
+    estudiante_id,
+    curso_codigo,
+    calificacion,
+    AVG(calificacion) OVER (
+        PARTITION BY estudiante_id
+        ORDER BY fecha
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) AS promedio_movil
+FROM matriculas
+ORDER BY estudiante_id, fecha;
+
+SELECT CORR(edad, calificacion) AS correlacion_edad_calificacion
+FROM estudiantes e
+JOIN matriculas m ON e.id = m.estudiante_id;
+
+SELECT
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY calificacion) AS p25,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY calificacion) AS p50,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY calificacion) AS p75
+FROM matriculas;
+
+SELECT
+    e.id AS estudiante_id,
+    e.edad,
+    c.creditos,
+    m.calificacion,
+    CASE WHEN m.calificacion >= 7 THEN 'aprobado' ELSE 'reprobado' END AS resultado
+FROM estudiantes e
+JOIN matriculas m ON e.id = m.estudiante_id
+JOIN cursos c ON m.curso_codigo = c.codigo
+WHERE m.calificacion IS NOT NULL;
+
+SELECT
+DATE_TRUNC('month', fecha) AS mes,
+AVG(calificacion) AS promedio_calificacion,
+COUNT(*) AS total_matriculas
+FROM matriculas
+GROUP BY mes
+ORDER BY mes;
+
